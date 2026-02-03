@@ -1,16 +1,23 @@
 import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
 import noteRoutes from "./routes/noteRoutes.js";
 import { connectDB } from "./config/db.js";
-import dotenv from "dotenv"; 
+import dotenv from "dotenv";
 import rateLimiter from "./middleware/rateLimiter.js";
 import cors from "cors";
-import path from "path";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-dotenv.config({ quiet: true });
+// Load .env from backend folder (works when run from repo root or backend)
+dotenv.config({ path: path.join(__dirname, "..", ".env"), quiet: true });
+
 const app = express();
 const PORT = process.env.PORT || 5001;
-const __dirname = path.resolve();
+
+// Path to frontend build (backend/src -> backend -> frontend/dist)
+const frontendDist = path.join(__dirname, "..", "..", "frontend", "dist");
 
 // CORS must run first so all responses include Access-Control-Allow-Origin
 if (process.env.NODE_ENV !== "production") {
@@ -24,9 +31,9 @@ app.use(rateLimiter);
 app.use("/api/notes", noteRoutes);
 
 if (process.env.NODE_ENV === "production") {
-    app.use(express.static(path.join(__dirname, "../frontend/dist")));
+    app.use(express.static(frontendDist));
     app.get("*", (req, res) => {
-        res.sendFile(path.resolve(__dirname, "../frontend/dist/index.html"));
+        res.sendFile(path.join(frontendDist, "index.html"));
     });
 }
 
