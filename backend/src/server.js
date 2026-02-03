@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
+import { existsSync } from "fs";
 import noteRoutes from "./routes/noteRoutes.js";
 import { connectDB } from "./config/db.js";
 import dotenv from "dotenv";
@@ -30,7 +31,8 @@ app.use(express.json());
 app.use(rateLimiter);
 app.use("/api/notes", noteRoutes);
 
-if (process.env.NODE_ENV === "production") {
+// Serve built frontend when dist exists (production or after "npm run build --prefix frontend")
+if (existsSync(frontendDist)) {
     app.use(express.static(frontendDist));
     app.get("*", (req, res) => {
         res.sendFile(path.join(frontendDist, "index.html"));
